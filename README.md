@@ -162,3 +162,7 @@ their directories.
 [shader-unlicense]: https://github.com/linebender/vello/blob/main/research/vello_shaders/shader/UNLICENSE
 [vello-shaders-cpu-dir]: https://github.com/linebender/vello/tree/main/research/vello_shaders/src/cpu
 [vello-shaders-dir]: https://github.com/linebender/vello/tree/main/research/vello_shaders/shader
+
+## Testfoss demo
+
+The additive `testfoss-demo` branch builds and tests the official `wgpu_webgl` example and checks WebGL2 scene navigation in Chromium through `lmwebtest`; it makes no WebGPU claim. See [the demo guide](testfoss/README.md) for commands and [the provenance record](durable-memory/testfoss-demo.md) for lab evidence and limitations. Run `./testfoss/build.sh`, `./testfoss/test.sh`, then `./testfoss/browser.sh`.

@@ -1,0 +1,47 @@
+let base_url = env("TESTFOSS_URL", "http://127.0.0.1:8106/");
+program = _lmcode_ cli="lmwebtest playwright";
+let b = pw.launch("chromium", "{\"headless\":true,\"args\":[\"--use-angle=swiftshader\",\"--enable-unsafe-swiftshader\"]}");
+let p = b.new_page();
+p.set_viewport(1440, 1000);
+p.set_default_timeout(90000);
+p.goto(pw.env("TESTFOSS_URL"));
+p.wait_for_function("document.title.includes('Page 1/22') && document.querySelector('canvas')?.width > 0");
+let first_title = p.title();
+$return.first_title = first_title;
+$return.webgl2 = p.evaluate("document.querySelector('canvas').getContext('webgl2') !== null");
+$return.canvas = p.evaluate("(() => { const canvas = document.querySelector('canvas'); return {width: canvas.width, height: canvas.height}; })()");
+p.get_by_role("button", "{\"name\":\"Next scene\"}").click();
+p.wait_for_function("document.title.includes('Page 2/22')");
+p.keyboard_press("ArrowRight");
+p.wait_for_function("document.title.includes('Page 3/22')");
+p.wait_for_function("document.body.innerText.includes('Scene 3/22')");
+$return.final_title = p.title();
+$return.scene_changed = first_title != p.title();
+$return.scene_text = p.evaluate("document.body.innerText.includes('Scene 3/22')");
+$return.console = p.console_log();
+$return.page_errors = p.page_errors();
+$return.failed_requests = p.failed_requests();
+$return.http_errors = p.http_errors();
+p.screenshot("testfoss/results/vello-webgl2.png", true);
+b.close();
+end _lmcode_
+
+let res = run_lmcode(program, {command: ["lmwebtest", "playwright", "--lmcode", "$DSLFILE"]});
+write_json("testfoss/results/browser.json", res);
+require(res.get("ok", false), json_stringify(res));
+let r = res.get("result", {});
+let canvas = json_parse(r.get("canvas", "{}"));
+require(starts_with(r.get("first_title", ""), "Vello GPU WGPU WebGL - Page 1/22"), r.get("first_title", ""));
+require(starts_with(r.get("final_title", ""), "Vello GPU WGPU WebGL - Page 3/22"), r.get("final_title", ""));
+require(r.get("webgl2", "") == "true", "The official demo did not expose its WebGL2 canvas context");
+require(canvas.get("width", 0) > 0 && canvas.get("height", 0) > 0, "Missing Vello canvas dimensions");
+require(r.get("scene_changed", false), "Vello scene navigation did not change the page");
+require(r.get("scene_text", "") == "true", "Vello scene 3 status was not visible");
+require(contains(r.get("console", ""), "WebGL 2.0"), "Browser console did not confirm the WebGL 2.0 backend");
+require(r.get("page_errors", "") == "[]", r.get("page_errors", ""));
+require(r.get("failed_requests", "") == "[]", r.get("failed_requests", ""));
+let http_errors = json_parse(r.get("http_errors", "[]"));
+for (error in http_errors) {
+  require(ends_with(error.get("url", ""), "/favicon.ico"), json_stringify(error));
+}
+println("Vello official WebGL2 demo and scene-navigation checks passed");

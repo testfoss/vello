@@ -98,3 +98,11 @@ robustness"), and empty headings.
   them.
 
 [llm-policy]: https://linebender.org/wiki/llm-policy/
+
+## Testfoss fork additions
+
+Keep upstream source, examples, lockfiles, and existing workflows unchanged. Fork additions belong in `testfoss/`, `durable-memory/`, and `.github/workflows/testfoss.yml`; the root README may contain only the short Testfoss section. Preserve all upstream guidance above for any upstream work.
+
+Use `cargo run_wasm -p wgpu_webgl --release --locked --build-only` and the official `wasm-pack test --headless --chrome` from `vello_gpu/examples/wgpu_webgl/`. Run `./testfoss/build.sh`, `./testfoss/test.sh`, and `./testfoss/browser.sh` after changing the fork demo. Browser checks must invoke `lmwebtest playwright` from `browser.lms` and cover the official WebGL2 canvas and scene navigation. Do not substitute WebGPU or make WebGPU-on-SwiftShader claims.
+
+Do not commit generated Wasm, Cargo output, `node_modules`, build trees, screenshots, or results. See `durable-memory/testfoss-demo.md` for provenance and limitations.
